@@ -5,17 +5,25 @@ if (!Notification.requestPermission())
     window,
     'Notification',
     {
-      value: (function (Notification) {
-        return {
-          permission: Notification.permission,
-          requestPermission: function requestPermission() {
+      value: (function (_Notification) {
+        function Notification(title, options) {
+          switch (arguments.length) {
+            case 1:
+              return new _Notification(title);
+            default:
+              return new _Notification(title, options);
+          }
+        }
+        Notification.permission = _Notification.permission;
+        Notification.requestPermission = function requestPermission() {
             return new Promise(function (resolve, reject) {
               setTimeout(function () {
-                resolve(Notification.permission);
+                resolve(_Notification.permission);
               });
             });
-          }
-        };
+          };
+        Notification.prototype = _Notification.prototype;
+        return Notification;
       }(Notification))
     }
   );
