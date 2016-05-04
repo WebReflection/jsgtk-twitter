@@ -2,7 +2,7 @@
  ... if that makes any sense to you.
 
 ## WAT!?!
-Twitter released a new https://mobild.twitter.com/ which looks pretty nice.
+Twitter released a new https://mobile.twitter.com/ which looks pretty nice.
 You can finally have it as stand-alone application on Linux Desktop too,
 through a simple wrapper written in few hours of JavaScript writing and testing.
 
