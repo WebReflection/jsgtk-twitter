@@ -1,0 +1,50 @@
+#!/usr/bin/bash
+
+APP="app"
+ICON="app.png"
+
+echo "#!/usr/bin/env bash
+cd $(pwd)
+./$APP \"\$@\" > /dev/null 2>&1 &
+">"$APP.tmp"
+
+mkdir -p /tmp/create-desktop-app
+mv "$APP.tmp" /tmp/create-desktop-app/$APP
+cp $ICON /tmp/create-desktop-app
+cd /tmp/create-desktop-app
+chmod +x "$APP"
+echo '#!/bin/sh
+set -e
+test -n "$srcdir" || srcdir=`dirname "$0"`
+test -n "$srcdir" || srcdir=.
+olddir=`pwd`
+cd "$srcdir"
+autoreconf --force --install
+cd "$olddir"
+if test -z "$NOCONFIGURE"; then
+  "$srcdir"/configure "$@"
+fi'>autogen.sh
+chmod +x autogen.sh
+echo "[Desktop Entry]
+Version=1.0
+Encoding=UTF-8
+Name=jsGtk Twitter
+Comment=Mobile Twitter Desktop Wrapper
+Exec=@prefix@/bin/$APP
+Icon=@prefix@/bin/$ICON
+Terminal=false
+Type=Application
+StartupNotify=true
+Categories=GNOME;Application;">"${APP}.desktop.in"
+echo "bin_SCRIPTS = ${APP}">Makefile.am
+echo 'EXTRA_DIST = $(bin_SCRIPTS)'>>Makefile.am
+echo 'desktopdir = $(datadir)/applications'>>Makefile.am
+echo "desktop_DATA = ${APP}.desktop">>Makefile.am
+echo "AC_INIT([$2], 1.0)
+AM_INIT_AUTOMAKE([1.10 no-define foreign dist-xz no-dist-gzip])
+AC_CONFIG_FILES([Makefile ${APP}.desktop])
+AC_OUTPUT">configure.ac
+./autogen.sh
+sudo make install
+sudo cp $ICON "$(dirname $(which $APP))"
+rm -rf /tmp/create-desktop-app

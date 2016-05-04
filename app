@@ -52,9 +52,7 @@ const
       .once('shutdown', () => this.saveInfo())
       .on('activate', () => {
         this.window.on('configure-event', () => this.updateInfo());
-        if (this.info.hasOwnProperty('x') && this.info.hasOwnProperty('y')) {
-          this.window.move(this.info.x, this.info.y);
-        }
+        this.window.move(this.info.x, this.info.y);
         this.window.showAll();
       });
     this.app.run(args);
@@ -79,18 +77,31 @@ const
     fs.writeFileSync(this.json, JSON.stringify(this.info, null, '  '));
   },
   initUI() {
-    const screen = Gdk.Screen.getDefault();
-    this.window = new Gtk.ApplicationWindow({
-      application: this.app,
-      defaultWidth: this.info.defaultWidth || 360,
-      defaultHeight:  this.info.defaultHeight ||
-                      Math.max(160, screen.getHeight() - 160),
-      windowPosition: this.info.windowPosition
-    });
+    const
+      screen = Gdk.Screen.getDefault(),
+      margin = 160,
+      config = {
+        application: this.app,
+        defaultWidth: this.info.defaultWidth || 360,
+        defaultHeight:  this.info.defaultHeight ||
+                        Math.max(margin, screen.getHeight() - margin),
+        windowPosition: this.info.windowPosition
+      }
+    ;
+    this.window = new Gtk.ApplicationWindow(config);
     this.window.setIconFromFile(this.icon);
     this.window.on('delete_event', () => false);
     this.window.setTitlebar(this.header);
     this.window.add(this.webView);
+    if (!this.info.hasOwnProperty('x')) {
+      this.info.x = screen.getWidth() -
+                    Math.floor(margin / 4 + config.defaultWidth);
+    }
+    if (!this.info.hasOwnProperty('y')) {
+      this.info.y = Math.ceil(
+        (screen.getHeight() - config.defaultHeight) / 2
+      );
+    }
   },
   get webView() {
     if (!this._webView) {
