@@ -6,7 +6,7 @@ Twitter released a new https://mobild.twitter.com/ which looks pretty nice.
 You can finally have it as stand-alone application on Linux Desktop too,
 through a simple wrapper written in few hours of JavaScript writing and testing.
 
-![jsGtk Twitter screenshot](http://webreflection.github.io/jsgtk-twitter/img/sc02.png)
+![jsGtk Twitter screenshot](http://webreflection.github.io/jsgtk-twitter/img/sc02.png?360)
 
 This is the beauty of [writing native App with JavaScript](https://www.webreflection.co.uk/blog/2015/12/08/writing-native-apps-with-javascript).
 
@@ -38,4 +38,4 @@ If there's some special functionality you'd like to have, give me a shout.
 Please note this project was created mostly for personal need/usage, I'm not sure I'll have much time for it, I hope is good already enough.
 Enjoy.
 
-![jsGtk Twitter screenshot](http://webreflection.github.io/jsgtk-twitter/img/sc02.png)
+![jsGtk Twitter screenshot](http://webreflection.github.io/jsgtk-twitter/img/sc02.png?360)
