@@ -30,7 +30,8 @@ const
   GdkPixbuf = require('GdkPixbuf'),
   WebKit2 = require('WebKit2'),
   fs = require('fs'),
-  path = require('path')
+  path = require('path'),
+  spawn = require('child_process').spawn
 ;
 
 ({
@@ -76,6 +77,7 @@ const
   saveInfo() {
     this.info.uri = this.webView.uri;
     fs.writeFileSync(this.json, JSON.stringify(this.info, null, '  '));
+    this.cleanUp();
   },
   initUI() {
     const
@@ -320,22 +322,26 @@ const
         screen = Gdk.Screen.getDefault(),
         files = images.map(src => path.join(__dirname, GLib.basename(src)))
       ;
-      require('child_process').spawn('curl', ['-L', '-O', images[i]], {
-        cwd: __dirname
-      }).once('close', () => {
-        let
-          margin = 320,
-          fileName = files[i],
-          window = new Gtk.Window({
-            transientFor: this.window,
-            defaultWidth: screen.getWidth() - margin,
-            defaultHeight: screen.getHeight() - margin,
-            windowPosition: Gtk.WindowPosition.CENTER
-          }),
-          pixbuf = GdkPixbuf.Pixbuf.newFromFile(fileName)
-        ;
-        window.add(Gtk.Image.newFromPixbuf(
-          pixbuf.scaleSimple.apply(
+      Promise.all(images.map(img => new Promise((res, rej) => {
+        spawn('curl', ['-L', '-O', img], {cwd: __dirname}).once('close', res);
+      }))).then(() => {
+        new Promise((res, rej) => {
+          spawn('sync', [], {}).once('close', res);
+        }).then(() => {
+          let
+            margin = 0,
+            window = new Gtk.Dialog({
+              defaultWidth: screen.getWidth() - margin,
+              defaultHeight: screen.getHeight() - margin,
+              modal: true,
+              useHeaderBar: false,
+              decorated: false,
+              // opacity: 0.5,
+              transientFor: this.window
+            })
+            ,pixbuf = GdkPixbuf.Pixbuf.newFromFile(files[i])
+          ;
+          pixbuf = Gtk.Image.newFromPixbuf(pixbuf.scaleSimple.apply(
             pixbuf,
             this.calucalteSize(
               screen,
@@ -344,13 +350,16 @@ const
             ).concat(
               GdkPixbuf.InterpType.BILINEAR
             )
-          )
-        ));
-        window.once('delete_event', () => {
-          this.cleanUp(files);
-          window.destroy();
+          ));
+          window.once('delete_event', () => {
+            this.cleanUp(files);
+            window.destroy();
+            window = null;
+            pixbuf = null;
+          });
+          window.getContentArea().add(pixbuf);
+          window.showAll();
         });
-        window.showAll();
       });
     },
     //*/
