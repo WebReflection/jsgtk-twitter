@@ -38,7 +38,7 @@ If there's some special functionality you'd like to have, give me a shout.
 Please note this project was created mostly for personal need/usage, I'm not sure I'll have much time for it, I hope is good already enough.
 Enjoy.
 
-![jsGtk Twitter screenshot](http://webreflection.github.io/jsgtk-twitter/img/sc01.png?360)
-
 ### How to test stuff ?
 Remember to launch the app via `./app --debug` to get notified about all the things and have no conflicts with the live web app.
+
+![jsGtk Twitter screenshot](http://webreflection.github.io/jsgtk-twitter/img/sc01.png?360)
