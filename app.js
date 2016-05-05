@@ -84,6 +84,23 @@ document.addEventListener('click', function (e) {
   }
 }, true);
 
+JSGTK.ni = setInterval(function (data) {
+  var
+    notifications = document.querySelector('[href="/notifications"] span'),
+    messages = document.querySelector('[href="/messages"] span'),
+    length = !!notifications + !!messages
+  ;
+  if (length > data.length || !length) {
+    data.length = length;
+    if (length && JSGTK.notify) {
+      JSGTK.notify(
+        parseFloat(notifications ? notifications.textContent : 0),
+        parseFloat(messages ? messages.textContent : 0)
+      );
+    }
+  }
+}, 2000, {length: 0});
+
 function nuf(e) {
   e.preventDefault();
   e.stopPropagation();

@@ -28,6 +28,7 @@ const
   Gio = require('Gio'),
   Gdk = require('Gdk'),
   GdkPixbuf = require('GdkPixbuf'),
+  Notify = require('Notify'),
   WebKit2 = require('WebKit2'),
   fs = require('fs'),
   path = require('path'),
@@ -149,17 +150,6 @@ const
             break;
         }
       });
-      if (this.info.showNotification) {
-        webView.on('show-notification', (webView, notification, data) => {
-          this._header.setSubtitle(notification.title);
-          notification.once('clicked', () => {
-            this.window.setKeepAbove(true);
-            setTimeout(() => {
-              this.window.setKeepAbove(false);
-            }, 100);
-          });
-        });
-      }
       webView.on('load-changed', (webView, loadEvent, data) => {
         switch (loadEvent) {
           case 2: // FIGUREITOUT: where the hell is WEBKIT_LOAD_COMMITTED constant?
@@ -276,8 +266,7 @@ const
     if (!this._header) {
       this._header = new Gtk.HeaderBar({
         title: this.title,
-        showCloseButton: false,
-        hasSubtitle: true
+        showCloseButton: false
       });
       this._header.packStart(this.button.back);
       this._header.packStart(this.button.refresh);
@@ -314,6 +303,21 @@ const
     debug: imports.jsgtk.constants.DEBUG,
     error() {
       console.error.apply(console, arguments);
+    },
+    notify(notifications, messages) {
+      if (this.info.showNotification) {
+        if (!Notify.isInitted())
+          Notify.init(this.title);
+        new Notify.Notification({
+          summary: `You have ${notifications + messages} updates`,
+          body: (
+            (notifications ? `${notifications} notifications` : '') +
+            (messages ?
+              ((notifications ? ' and ' : '') + `${messages} messages`) : '')
+          ),
+          iconName: this.icon
+        }).show();
+      }
     },
     /* TODO: finish properly this gallery
     gallery(images) {
