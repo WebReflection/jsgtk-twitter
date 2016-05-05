@@ -8,10 +8,9 @@ if (!Notification.requestPermission())
       value: (function (_Notification) {
         function Notification(title, options) {
           switch (arguments.length) {
-            case 1:
-              return new _Notification(title);
-            default:
-              return new _Notification(title, options);
+            case 0: return new _Notification();
+            case 1: return new _Notification(title);
+            default: return new _Notification(title, options);
           }
         }
         Notification.permission = _Notification.permission;
@@ -28,16 +27,64 @@ if (!Notification.requestPermission())
     }
   );
 
+addEventListener('error', function (e) {
+  JSGTK.error(e.message);
+}, true);
+
+// prevent remote webapp notifications
+// when it's actually me doing nasty things
+// to test this stuff
+if (JSGTK.debug) {
+  Object.defineProperties(
+    window,
+    {
+      addEventListener: {
+        value: (function (_addEventListener) {
+          return function addEventListener(type) {
+            if (type != 'error')
+              _addEventListener.apply(window, arguments);
+          };
+        }(addEventListener))
+      },
+      onerror: {
+        get: function () { return Object; },
+        set: function (niceTry) {}
+      }
+    }
+  );
+}
+
 document.addEventListener('click', function (e) {
-  if (e.target.nodeType === 1) {
-    var a = e.target.closest('a');
-    if (a && /^(?:_blank)$/.test(a.target)) {
-      e.preventDefault();
-      e.stopPropagation();
-      // provided automagically
-      // by the loader, injected upfront.
-      // It uses a private UID as protocol channel
-      JSGTK.open(a.href);
+  var target = e.target;
+  if (target.nodeType === 1) {
+    if (target.nodeName === 'IMG' && JSGTK.gallery) {
+      target = e.target.closest('[role=article]');
+      if (target) {
+        var images = Array.prototype.map.call(
+          target.querySelectorAll('img'),
+          function (img) { return img.src + ':orig'; }
+        ).filter(function (src) {
+          return -1 < src.indexOf('/media/');
+        });
+        if (images.length) {
+          nuf(e);
+          JSGTK.gallery(images);
+        }
+      }
+    } else {
+      target = e.target.closest('a[target=_blank]');
+      if (target) {
+        nuf(e);
+        // provided automagically
+        // by the loader, injected upfront.
+        // It uses a private UID as protocol channel
+        JSGTK.open(target.href);
+      }
     }
   }
 }, true);
+
+function nuf(e) {
+  e.preventDefault();
+  e.stopPropagation();
+}

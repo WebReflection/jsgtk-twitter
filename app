@@ -27,6 +27,7 @@ const
   Gtk = require('Gtk'),
   Gio = require('Gio'),
   Gdk = require('Gdk'),
+  GdkPixbuf = require('GdkPixbuf'),
   WebKit2 = require('WebKit2'),
   fs = require('fs'),
   path = require('path')
@@ -102,6 +103,16 @@ const
         (screen.getHeight() - config.defaultHeight) / 2
       );
     }
+    this.cleanUp();
+  },
+  cleanUp(files) {
+    let cb = (files) => files.forEach(fileName => {
+      if (fileName.slice(-5) === ':orig') {
+        fs.unlink(fileName, Object);
+      }
+    });
+    if (files) cb(files);
+    else fs.readdir(__dirname, (err, files) => cb(files));
   },
   get webView() {
     if (!this._webView) {
@@ -150,16 +161,22 @@ const
       webView.on('load-changed', (webView, loadEvent, data) => {
         switch (loadEvent) {
           case 2: // FIGUREITOUT: where the hell is WEBKIT_LOAD_COMMITTED constant?
+            let
+              stringified = 'JSON.stringify(Array.prototype.slice.call(arguments, 0))',
+              JSGTK = Object.keys(this.actions).map(
+                key => typeof this.actions[key] === 'function' ?
+                  `${key}: function ${key}() {
+                    location.href = '${this.channel}:${key}(' +
+                      encodeURIComponent(${stringified}) +
+                    ')';
+                  }` :
+                  `${key}: ${JSON.stringify(this.actions[key])}`
+              ).join(',\n')
+            ;
             webView.runJavaScript(
               `(function(window, JSGTK){"use strict";
                 ${this.javascript}
-              }(this,{
-                open: function open(uri) {
-                  location.href = '${this.channel}:open(' +
-                    encodeURIComponent(JSON.stringify([uri])) +
-                  ')';
-                }
-              }));`,
+              }(this, {\n${JSGTK}\n}));`,
               null,
               (webView, result) => {
                 webView.runJavaScriptFinish(result);
@@ -274,8 +291,70 @@ const
     ;
     this.actions[method].apply(this, args);
   },
+  calucalteSize(outer, inner, gap) {
+    let
+      mw = outer.getWidth() - gap,
+      mh = outer.getHeight() - gap,
+      cw = inner.getWidth(),
+      ch = inner.getHeight()
+    ;
+    if (mw < cw) {
+      ch = mw * ch / cw;
+      cw = mw;
+    }
+    if (mh < ch) {
+      cw = mh * cw / ch;
+      ch = mh;
+    }
+    return [cw, ch];
+  },
   actions: {
-    open: function (uri) {
+    debug: imports.jsgtk.constants.DEBUG,
+    error() {
+      console.error.apply(console, arguments);
+    },
+    /* TODO: finish properly this gallery
+    gallery(images) {
+      let
+        i = 0,
+        screen = Gdk.Screen.getDefault(),
+        files = images.map(src => path.join(__dirname, GLib.basename(src)))
+      ;
+      require('child_process').spawn('curl', ['-L', '-O', images[i]], {
+        cwd: __dirname
+      }).once('close', () => {
+        let
+          margin = 320,
+          fileName = files[i],
+          window = new Gtk.Window({
+            transientFor: this.window,
+            defaultWidth: screen.getWidth() - margin,
+            defaultHeight: screen.getHeight() - margin,
+            windowPosition: Gtk.WindowPosition.CENTER
+          }),
+          pixbuf = GdkPixbuf.Pixbuf.newFromFile(fileName)
+        ;
+        window.add(Gtk.Image.newFromPixbuf(
+          pixbuf.scaleSimple.apply(
+            pixbuf,
+            this.calucalteSize(
+              screen,
+              pixbuf,
+              margin
+            ).concat(
+              GdkPixbuf.InterpType.BILINEAR
+            )
+          )
+        ));
+        window.once('delete_event', () => {
+          this.cleanUp(files);
+          window.destroy();
+        });
+        window.showAll();
+      });
+    },
+    //*/
+    open(uri) {
       Gio.AppInfo.launchDefaultForUri(uri, null);
     }
   }
