@@ -166,9 +166,10 @@ const
               ).join(',\n')
             ;
             webView.runJavaScript(
-              `(function(window, JSGTK){"use strict";
+              `(function(window, JSGTK){'use strict';
                 ${this.javascript}
-              }(this, {\n${JSGTK}\n}));`,
+                ;window.addEventListener('${this.channel}', gtkHandler);
+              }(this, {\nshowNotification: ${this.info.showNotification},\n${JSGTK}\n}));`,
               null,
               (webView, result) => {
                 webView.runJavaScriptFinish(result);
@@ -203,9 +204,22 @@ const
             state: new GLib.Variant('b', this.info.showNotification)
           },
           callback: (action) => {
-            let state = action.getState().getBoolean();
-            action.setState(new GLib.Variant('b', !state));
-            this.info.showNotification = !state;
+            let state = !action.getState().getBoolean();
+            action.setState(new GLib.Variant('b', state));
+            this.info.showNotification = state;
+            // notify changes to the webView too
+            this.webView.runJavaScript(
+              `window.dispatchEvent(
+                new CustomEvent(
+                  '${this.channel}',
+                  {detail: {showNotification: ${state}}}
+                )
+              );`,
+              null,
+              (webView, result) => {
+                webView.runJavaScriptFinish(result);
+              }
+            );
           }
         },
         {

@@ -1,3 +1,14 @@
+// generic handler triggered fromthe GTK world
+// the currentTarget is always the window
+function gtkHandler(e) {
+  var detail = e.detail;
+  switch (true) {
+    case detail.hasOwnProperty('showNotification'):
+      JSGTK.showNotification = detail.showNotification;
+      break;
+  }
+}
+
 // will enable them by default
 // and fix the deprecated API
 if (!Notification.requestPermission())
@@ -84,23 +95,29 @@ document.addEventListener('click', function (e) {
   }
 }, true);
 
-JSGTK.ni = setInterval(function (data) {
-  var
-    notifications = document.querySelector('[href="/notifications"] span'),
-    messages = document.querySelector('[href="/messages"] span'),
-    length = !!notifications + !!messages
-  ;
-  if (length > data.length || !length) {
-    data.length = length;
-    if (length && JSGTK.notify) {
-      JSGTK.notify(
-        parseFloat(notifications ? notifications.textContent : 0),
-        parseFloat(messages ? messages.textContent : 0)
-      );
+// only if the method is exposed
+if (JSGTK.notify) {
+  JSGTK.ni = setInterval(function (data) {
+    // and only if notifications are enabled
+    if (!JSGTK.showNotification) return;
+    var
+      notifications = document.querySelector('[href="/notifications"] span'),
+      messages = document.querySelector('[href="/messages"] span'),
+      length = !!notifications + !!messages
+    ;
+    if (length > data.length || !length) {
+      data.length = length;
+      if (length) {
+        JSGTK.notify(
+          parseFloat(notifications ? notifications.textContent : 0),
+          parseFloat(messages ? messages.textContent : 0)
+        );
+      }
     }
-  }
-}, 2000, {length: 0});
+  }, 2000, {length: 0});
+}
 
+// little helper to stop everything
 function nuf(e) {
   e.preventDefault();
   e.stopPropagation();
