@@ -1,7 +1,7 @@
 # A Desktop Client for Twitter Mobile
  ... if that makes any sense to you.
 
-## WAT!?!
+### WAT!?!
 Twitter released a new https://mobile.twitter.com/ which looks pretty nice.
 You can finally have it as stand-alone application on Linux Desktop too,
 through a simple wrapper written in few hours of JavaScript writing and testing.
@@ -10,33 +10,56 @@ through a simple wrapper written in few hours of JavaScript writing and testing.
 
 This is the beauty of [writing native App with JavaScript](https://www.webreflection.co.uk/blog/2015/12/08/writing-native-apps-with-javascript).
 
-## How To Install
+
+## How To Install on Mac / OSX
+
+Currently, there is a [bug](https://trac.macports.org/ticket/51318) with one dependency so it might not work right now ... however ...
+
+If you don't have Command Line Tools already installed, please write this on your terminal:
+```sh
+# content in https://github.com/WebReflection/jsgtk/blob/gh-pages/clt
+sh -c "$(curl -fsSL https://webreflection.github.io/jsgtk/clt)"
+```
+
+After that, the only current working packages manager is MacPorts.
+
+Please download and install it [from the official page](https://www.macports.org/install.php).
+
+The last step is to install [jsgtk]() and all dependencies, including WebKit2 GTK.
+Please write this in console.
+```sh
+# content in https://github.com/WebReflection/jsgtk/blob/gh-pages/install
+WEBKIT=true sh -c "$(curl -fsSL https://webreflection.github.io/jsgtk/install)"
+```
+
+Please note it might take very long time to fully build all dependencies.
+
+In case you have/want X11 instead of quartz as UI backend, please export `X11=true` too.
+If you don't want any `gstreamer1-gst-plugin-bad`, neither `x11` nor `gtk2`, you can export `PURE_QUARTZ=true`.
+
+
+## How To Install on Linux
 The dependency number 1 is [jsgtk](https://github.com/WebReflection/jsgtk).
 There are [few ways to install it](https://github.com/WebReflection/jsgtk#how-to-install), just pick your favorite.
 
-The secondary dependency is `WebKit2GTK`, and on Linux [you should have no problems](https://github.com/WebReflection/jsgtk#dependencies).
+The easiest way is to write this on a terminal:
+```sh
+# content in https://github.com/WebReflection/jsgtk/blob/gh-pages/install
+WEBKIT=true sh -c "$(curl -fsSL https://webreflection.github.io/jsgtk/install)"
+```
 
-At this point I haven't tested (yet) on OSX, if you have problems or errors with WebKit, I'm sorry about that, I swear [it's not my fault](https://github.com/Homebrew/legacy-homebrew/issues/47000).
-You might get lucky with MacPorts though.
 
-### How to run
+## How to run
 I haven't yet created a proper [AUR](https://wiki.archlinux.org/index.php/Arch_User_Repository) or [npm](https://www.npmjs.com/) package yet, but I eventually will.
 The simplest way to use this app is to clone this repository and then launch `./app`.
 
 The first time only you'll need to login through the website.
 This app doesn't hold, send, use, or analyze anything about you, your account, your twitter activity, or your credentials.
 
-### How to install on Linux
+
+### How to install on Linux as Desktop App
 There is an `app.install` which, if executed, should make the app available through the main Desktop environment, at least in ArchLinux and GNOME, [which is my primary OS of choice](http://archibold.io/).
 
-### What's missing?
-A simpified way to install this cross platform (meaning Linux and OSX, I'm afraid Windows decided to not simplify GTK UI development in its platform so ...)
-
-The wrapper is ready to receives notifications, if they'll ever send them.
-If there's some special functionality you'd like to have, give me a shout.
-
-Please note this project was created mostly for personal need/usage, I'm not sure I'll have much time for it, I hope is good already enough.
-Enjoy.
 
 ### How to test stuff ?
 Remember to launch the app via `./app --debug` to get notified about all the things and have no conflicts with the live web app.
