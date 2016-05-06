@@ -13,8 +13,6 @@ This is the beauty of [writing native App with JavaScript](https://www.webreflec
 
 ## How To Install on Mac / OSX
 
-Currently, there is a [bug](https://trac.macports.org/ticket/51318) with one dependency so it might not work right now ... however ...
-
 If you don't have Command Line Tools already installed, please write this on your terminal:
 ```sh
 # content in https://github.com/WebReflection/jsgtk/blob/gh-pages/clt
