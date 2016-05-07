@@ -28,12 +28,29 @@ const
   Gio = require('Gio'),
   Gdk = require('Gdk'),
   GdkPixbuf = require('GdkPixbuf'),
-  Notify = require('Notify'),
   WebKit2 = require('WebKit2'),
   fs = require('fs'),
   os = require('os'),
   path = require('path'),
-  spawn = require('child_process').spawn
+  spawn = require('child_process').spawn,
+  Notify = os.platform() === 'darwin' ?
+    {
+      init: Object,
+      isInitted: function isInitted() { return true; },
+      Notification: function Notification(notification) {
+        this.show = function show() {
+          spawn('osascript', [
+            '-e',
+            `display notification "${
+              notification.body
+             }" with title "${
+              notification.summary
+             }"`
+          ]);
+        };
+      }
+    } :
+    require('Notify')
 ;
 
 ({
@@ -321,7 +338,9 @@ const
     },
     notify(notifications, messages) {
       if (this.info.showNotification) {
-        const notification = {
+        if (!Notify.isInitted())
+          Notify.init(this.title);
+        new Notify.Notification({
           summary: `You have ${notifications + messages} updates`,
           body: (
             (notifications ? `${notifications} notifications` : '') +
@@ -329,21 +348,7 @@ const
               ((notifications ? ' and ' : '') + `${messages} messages`) : '')
           ),
           iconName: this.icon
-        };
-        if (os.platform() === 'darwin') {
-          spawn('osascript', [
-            '-e',
-            `display notification "${
-              notification.body
-             }" with title "${
-              notification.summary
-             }"`
-          ]);
-        } else {
-          if (!Notify.isInitted())
-            Notify.init(this.title);
-          new Notify.Notification(notification).show();
-        }
+        }).show();
       }
     },
     /* TODO: finish properly this gallery
