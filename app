@@ -36,8 +36,8 @@ const
   Notify = os.platform() === 'darwin' ?
     {
       init: Object,
-      isInitted: function isInitted() { return true; },
-      Notification: function Notification(notification) {
+      isInitted() { return true; },
+      Notification(notification) {
         this.show = function show() {
           spawn('osascript', [
             '-e',
