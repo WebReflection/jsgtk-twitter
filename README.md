@@ -13,6 +13,8 @@ This is the beauty of [writing native App with JavaScript](https://www.webreflec
 
 ## How To Install on Mac / OSX
 
+**Note**: Highly experimental, it takes long time to install due lack of pre-built WebKit2GTK quartz package via MacPorts.
+
 If you don't have Command Line Tools already installed, please write this on your terminal:
 ```sh
 # content in https://github.com/WebReflection/jsgtk/blob/gh-pages/clt
