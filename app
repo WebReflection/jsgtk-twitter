@@ -30,7 +30,6 @@ const
   GdkPixbuf = require('GdkPixbuf'),
   Notify = require('Notify'),
   WebKit2 = require('WebKit2'),
-  spawn = require('child_process').spawn,
   fs = require('fs'),
   os = require('os'),
   path = require('path'),
