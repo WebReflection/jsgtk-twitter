@@ -30,6 +30,7 @@ const
   GdkPixbuf = require('GdkPixbuf'),
   Notify = require('Notify'),
   WebKit2 = require('WebKit2'),
+  spawn = require('child_process').spawn,
   fs = require('fs'),
   os = require('os'),
   path = require('path'),
@@ -321,9 +322,7 @@ const
     },
     notify(notifications, messages) {
       if (this.info.showNotification) {
-        if (!Notify.isInitted())
-          Notify.init(this.title);
-        new Notify.Notification({
+        const notification = {
           summary: `You have ${notifications + messages} updates`,
           body: (
             (notifications ? `${notifications} notifications` : '') +
@@ -331,7 +330,21 @@ const
               ((notifications ? ' and ' : '') + `${messages} messages`) : '')
           ),
           iconName: this.icon
-        }).show();
+        };
+        if (os.platform() === 'darwin') {
+          spawn('osascript', [
+            '-e',
+            `display notification "${
+              notification.body
+             }" with title "${
+              notification.summary
+             }"`
+          ]);
+        } else {
+          if (!Notify.isInitted())
+            Notify.init(this.title);
+          new Notify.Notification(notification).show();
+        }
       }
     },
     /* TODO: finish properly this gallery
@@ -386,7 +399,7 @@ const
       // problems with this operation on OSX
       if (os.platform() === 'darwin') {
         // fallback to a system call
-        GLib.spawnCommandLineSync('open ' + uri);
+        spawn('open', [uri]);
       } else {
         Gio.AppInfo.launchDefaultForUri(uri, null);
       }
