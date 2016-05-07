@@ -31,6 +31,7 @@ const
   Notify = require('Notify'),
   WebKit2 = require('WebKit2'),
   fs = require('fs'),
+  os = require('os'),
   path = require('path'),
   spawn = require('child_process').spawn
 ;
@@ -382,7 +383,13 @@ const
     },
     //*/
     open(uri) {
-      Gio.AppInfo.launchDefaultForUri(uri, null);
+      // problems with this operation on OSX
+      if (os.platform() === 'darwin') {
+        // fallback to a system call
+        GLib.spawnCommandLineSync('open ' + uri);
+      } else {
+        Gio.AppInfo.launchDefaultForUri(uri, null);
+      }
     }
   }
 }).run();
