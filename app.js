@@ -1,3 +1,8 @@
+// intercepts and shows possible webView errors
+addEventListener('error', function (e) {
+  JSGTK.error(e.message);
+}, true);
+
 // generic handler triggered fromthe GTK world
 // the currentTarget is always the window
 function gtkHandler(e) {
@@ -37,10 +42,6 @@ if (!Notification.requestPermission())
       }(Notification))
     }
   );
-
-addEventListener('error', function (e) {
-  JSGTK.error(e.message);
-}, true);
 
 // prevent remote webapp notifications
 // when it's actually me doing nasty things

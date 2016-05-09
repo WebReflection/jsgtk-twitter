@@ -23,6 +23,7 @@
 !*/
 
 const
+  DEBUG = imports.jsgtk.constants.DEBUG,
   GLib = require('GLib'),
   Gtk = require('Gtk'),
   Gio = require('Gio'),
@@ -137,8 +138,22 @@ const
   },
   get webView() {
     if (!this._webView) {
-      const webView = new WebKit2.WebView();
-      webView.getContext().getCookieManager().setPersistentStorage(
+      const
+        webView = new WebKit2.WebView(),
+        context = webView.getContext()
+      ;
+      if (DEBUG) {
+        [
+          'insecure-content-detected',
+          'load-failed',
+          'load-failed-with-tls-errors'
+        ].forEach((type) => {
+          webView.connect(type, () => {
+            console.warn(type);
+          });
+        });
+      }
+      context.getCookieManager().setPersistentStorage(
         this.cookies,
         WebKit2.CookiePersistentStorage.TEXT
       );
@@ -153,7 +168,7 @@ const
             if (uri.indexOf(channel + ':') === 0) {
               this.jsAction(uri.slice(channel.length + 1));
               policy.ignore();
-            }
+            } else if (DEBUG) console.info(uri);
             break;
         }
       });
@@ -225,19 +240,7 @@ const
             let state = !action.getState().getBoolean();
             action.setState(new GLib.Variant('b', state));
             this.info.showNotification = state;
-            // notify changes to the webView too
-            this.webView.runJavaScript(
-              `window.dispatchEvent(
-                new CustomEvent(
-                  '${this.channel}',
-                  {detail: {showNotification: ${state}}}
-                )
-              );`,
-              null,
-              (webView, result) => {
-                webView.runJavaScriptFinish(result);
-              }
-            );
+            this.runJavaScript(`{showNotification: ${state}}`);
           }
         },
         {
@@ -306,6 +309,20 @@ const
     }
     return this._header;
   },
+  runJavaScript(detail) {
+    this.webView.runJavaScript(
+      `window.dispatchEvent(
+        new CustomEvent(
+          '${this.channel}',
+          {detail: ${detail}}
+        )
+      );`,
+      null,
+      (webView, result, error) => {
+        webView.runJavaScriptFinish(result);
+      }
+    );
+  },
   jsAction(which) {
     const
       i = which.indexOf('('),
@@ -332,7 +349,7 @@ const
     return [cw, ch];
   },
   actions: {
-    debug: imports.jsgtk.constants.DEBUG,
+    debug: DEBUG,
     error() {
       console.error.apply(console, arguments);
     },
