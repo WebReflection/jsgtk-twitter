@@ -198,6 +198,7 @@ const
                   `${key}: ${JSON.stringify(this.actions[key])}`
               ).join(',\n')
             ;
+            this.JSGTK = JSGTK;
             webView.runJavaScript(
               `(function(window, JSGTK){'use strict';
                 ${this.javascript}
@@ -243,18 +244,32 @@ const
             this.runJavaScript(`{showNotification: ${state}}`);
           }
         },
-        {
-          name: 'Copy current page uri',
-          action: 'copy-page-uri',
+        [{
+          name: 'Grab emoji',
+          action: 'grab-emoji',
+          callback: () => {
+            if (this.emojiShown) {
+              this.emojiShown = false;
+              this.window.remove(this.emoji);
+              this.window.add(this.webView);
+            } else {
+              this.emojiShown = true;
+              this.window.remove(this.webView);
+              this.window.add(this.emoji);
+            }
+          }
+        },{
+          name: 'Grab current page uri',
+          action: 'grab-page-uri',
           callback: () => {
             Gtk.Clipboard.getDefault(
               Gdk.Display.getDefault()
             ).setText(
               this.webView.uri,
-              this.webView.uri.length
+              -1
             );
           }
-        },
+        }],
         {
           name: 'Close',
           action: 'close',
@@ -270,7 +285,7 @@ const
                 item.extras || {},
                 {name: item.action}
             ))
-            .on('activate', item.callback)
+            .on('activate', item.callback || Object)
           );
         });
         menu.appendSection(null, section);
@@ -283,6 +298,49 @@ const
 
     }
     return this._menu;
+  },
+  get emoji() {
+    if (!this._emoji) {
+      const
+        emoji = new WebKit2.WebView(),
+        settings = emoji.getSettings()
+      ;
+      settings.setEnableJavascript(false);
+      emoji.loadUri('https://twemoji.maxcdn.com/2/test/preview.html');
+      emoji.on('decide-policy', (webView, policy, type) => {
+        switch(type) {
+          case WebKit2.PolicyDecisionType.NAVIGATION_ACTION:
+            let
+              uri = policy.getRequest().getUri(),
+              channel = this.channel
+            ;
+            if (uri.indexOf(channel + ':') === 0) {
+              this.jsAction(uri.slice(channel.length + 1));
+              policy.ignore();
+            } else if (DEBUG) console.info(uri);
+            break;
+        }
+      });
+      emoji.on('load-changed', (webView, loadEvent, data) => {
+        switch (loadEvent) {
+          case 3:
+            settings.setEnableJavascript(true);
+            webView.runJavaScript(
+              `(function(window, JSGTK){'use strict';
+                ${fs.readFileSync(path.join(__dirname, 'emoji.js')).toString()}
+              }(this, {\n${this.JSGTK}\n}));`,
+              null,
+              (webView, result) => {
+                webView.runJavaScriptFinish(result);
+              }
+            );
+            break;
+        }
+      });
+      emoji.show();
+      this._emoji = emoji;
+    }
+    return this._emoji;
   },
   get button() {
     if (!this._button) {
@@ -350,6 +408,15 @@ const
   },
   actions: {
     debug: DEBUG,
+    grabEmoji(text) {
+      this.emojiShown = false;
+      this.window.remove(this.emoji);
+      this.window.add(this.webView);
+      if (DEBUG) print(text);
+      Gtk.Clipboard.getDefault(
+        Gdk.Display.getDefault()
+      ).setText(text, -1);
+    },
     error() {
       console.error.apply(console, arguments);
     },
