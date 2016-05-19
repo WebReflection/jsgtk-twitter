@@ -245,6 +245,12 @@ const
           }
         },
         [{
+          name: 'Show emoji',
+          action: 'show-emoji',
+          callback: () => {
+            this.runJavaScript(`{showEmoji: true}`);
+          }
+        },{
           name: 'Grab emoji',
           action: 'grab-emoji',
           callback: () => {
@@ -408,6 +414,37 @@ const
   },
   actions: {
     debug: DEBUG,
+    b64emoji(encode) {
+      var result = {};
+      function grab(icon) {
+        spawn(
+          'curl',
+          ['-L', '-O', 'http://twemoji.maxcdn.com/2/svg/' + icon + '.svg'],
+          {cwd: __dirname}
+        ).once('close', () => {
+          var chunks = [];
+          spawn('base64', icon + '.svg')
+            .once('close', () => {
+              GLib.unlink(icon + '.svg');
+              result[icon] = 'data:image/svg+xml;base64,' + chunks.join('');
+              next();
+            })
+            .stdout.on('data', (data) => {
+              chunks.push(data);
+            });
+        })
+      }
+      const next = () => {
+        if (encode.length) {
+          grab(encode.shift());
+        } else {
+          this.runJavaScript(JSON.stringify({
+            b64: result
+          }));
+        }
+      };
+      next();
+    },
     grabEmoji(text) {
       this.emojiShown = false;
       this.window.remove(this.emoji);
