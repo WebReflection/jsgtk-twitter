@@ -143,6 +143,7 @@ const
         context = webView.getContext()
       ;
       if (DEBUG) {
+        webView.getSettings().setEnableWriteConsoleMessagesToStdout(true);
         [
           'insecure-content-detected',
           'load-failed',
