@@ -272,7 +272,7 @@ const
             Gtk.Clipboard.getDefault(
               Gdk.Display.getDefault()
             ).setText(
-              this.webView.uri,
+              this.webView.uri.replace('mobile.', ''),
               -1
             );
           }
